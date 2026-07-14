@@ -2,34 +2,62 @@ pipeline {
     agent any
 
     environment {
-        IMAGE_NAME = "nishchitavc/sample-app"
+      IMAGE_NAME = "nishchitavc/sample-app"
+      IMAGE_TAG = "${BUILD_NUMBER}"
     }
 
-    stages {
 
-        stage('Build Docker Image') {
+    stages {
+        stage('Checkout') {
             steps {
-                bat "docker build -t %IMAGE_NAME% ."
+                git branch: 'main',
+                url: 'https://github.com/nishchitavc21/Sample-app.git'
             }
         }
 
-        stage('Docker Login') {
-            steps {
-                withCredentials([usernamePassword(
-                    credentialsId: 'DockerHub',
-                    usernameVariable: 'USER',
-                    passwordVariable: 'PASS'
-                )]) {
-                    bat 'echo %PASS% | docker login -u %USER% --password-stdin'
+        
+
+        stage('Build Docker Image'){
+            steps{
+                dir('Sample-app') {
+                    sh 'docker build -t $IMAGE_NAME:$IMAGE_TAG .'
                 }
             }
         }
 
-        stage('Push Docker Image') {
-            steps {
-                bat "docker push %IMAGE_NAME%"
+
+        stage('Push Image') {
+          steps {
+            dir('Sample-app') {
+              withCredentials([
+                  usernamePassword(
+                    credentialsId: 'DockerHub',
+                    usernameVariable: 'DOCKER_USER',
+                    passwordVariable: 'DOCKER_PASS'
+                  )
+                ])
+                {
+                  sh '''
+                  echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin
+                  docker push $IMAGE_NAME:$IMAGE_TAG
+                  '''
+                }  
             }
+            
+          }
         }
 
+        stage('Deploy'){
+          steps {
+            dir('june-batch-cicd') {
+                sh '''
+                docker stop react-app || true
+                docker rm react-app || true
+
+                docker run -d --name react-app -p 80:80 $IMAGE_NAME:$IMAGE_TAG
+                '''
+            }
+          }
+        }
     }
 }
