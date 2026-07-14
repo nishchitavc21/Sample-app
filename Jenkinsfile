@@ -13,7 +13,7 @@ pipeline {
         stage('Clone Repository') {
 
             steps {
-                git branch: 'main',
+                
                 git 'https://github.com/nishchitavc21/Sample-app.git'
 
             }
