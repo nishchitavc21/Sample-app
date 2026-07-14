@@ -1,63 +1,35 @@
 pipeline {
-
     agent any
 
     environment {
-
         IMAGE_NAME = "nishchitavc/sample-app"
-
     }
 
     stages {
 
-        stage('Clone Repository') {
-
-            steps {
-                
-                git 'https://github.com/nishchitavc21/Sample-app.git'
-
-            }
-
-        }
-
         stage('Build Docker Image') {
-
             steps {
-
-                bat 'docker build -t $IMAGE_NAME .'
-
+                bat "docker build -t %IMAGE_NAME% ."
             }
-
         }
 
         stage('Docker Login') {
-
             steps {
-
-                withCredentials([usernamePassword(credentialsId: 'DockerHub',
-
-                usernameVariable: 'USER',
-
-                passwordVariable: 'PASS')]) {
-
-                    bat 'echo $PASS | docker login -u $USER --password-stdin'
-
+                withCredentials([usernamePassword(
+                    credentialsId: 'DockerHub',
+                    usernameVariable: 'USER',
+                    passwordVariable: 'PASS'
+                )]) {
+                    bat 'echo %PASS% | docker login -u %USER% --password-stdin'
                 }
-
             }
-
         }
 
         stage('Push Docker Image') {
-
             steps {
-
-                bat 'docker push $IMAGE_NAME'
-
+                bat "docker push %IMAGE_NAME%"
             }
-
         }
 
     }
-
 }
