@@ -24,7 +24,7 @@ pipeline {
 
             steps {
 
-                sh 'docker build -t $IMAGE_NAME .'
+                bat 'docker build -t $IMAGE_NAME .'
 
             }
 
@@ -40,7 +40,7 @@ pipeline {
 
                 passwordVariable: 'PASS')]) {
 
-                    sh 'echo $PASS | docker login -u $USER --password-stdin'
+                    bat 'echo $PASS | docker login -u $USER --password-stdin'
 
                 }
 
@@ -52,7 +52,7 @@ pipeline {
 
             steps {
 
-                sh 'docker push $IMAGE_NAME'
+                bat 'docker push $IMAGE_NAME'
 
             }
 
