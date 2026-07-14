@@ -1,63 +1,63 @@
 pipeline {
+
     agent any
 
     environment {
-      IMAGE_NAME = "nishchitavc/sample-app"
-      IMAGE_TAG = "${BUILD_NUMBER}"
-    }
 
+        IMAGE_NAME = "nishchitavc21/sample-app"
+
+    }
 
     stages {
-        stage('Checkout') {
+
+        stage('Clone Repository') {
+
             steps {
-                git branch: 'main',
-                url: 'https://github.com/nishchitavc21/Sample-app.git'
+
+                git 'https://github.com/nishchitavc21/Sample-app.git'
+
             }
+
         }
 
-        
+        stage('Build Docker Image') {
 
-        stage('Build Docker Image'){
-            steps{
-                dir('Sample-app') {
-                    sh 'docker build -t $IMAGE_NAME:$IMAGE_TAG .'
+            steps {
+
+                sh 'docker build -t $IMAGE_NAME .'
+
+            }
+
+        }
+
+        stage('Docker Login') {
+
+            steps {
+
+                withCredentials([usernamePassword(credentialsId: 'DockerHub',
+
+                usernameVariable: 'USER',
+
+                passwordVariable: 'PASS')]) {
+
+                    sh 'echo $PASS | docker login -u $USER --password-stdin'
+
                 }
+
             }
+
         }
 
+        stage('Push Docker Image') {
 
-        stage('Push Image') {
-          steps {
-            dir('Sample-app') {
-              withCredentials([
-                  usernamePassword(
-                    credentialsId: 'DockerHub',
-                    usernameVariable: 'DOCKER_USER',
-                    passwordVariable: 'DOCKER_PASS'
-                  )
-                ])
-                {
-                  sh '''
-                  echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin
-                  docker push $IMAGE_NAME:$IMAGE_TAG
-                  '''
-                }  
+            steps {
+
+                sh 'docker push $IMAGE_NAME'
+
             }
-            
-          }
+
         }
 
-        stage('Deploy'){
-          steps {
-            dir('june-batch-cicd') {
-                sh '''
-                docker stop react-app || true
-                docker rm react-app || true
-
-                docker run -d --name react-app -p 80:80 $IMAGE_NAME:$IMAGE_TAG
-                '''
-            }
-          }
-        }
     }
+
 }
