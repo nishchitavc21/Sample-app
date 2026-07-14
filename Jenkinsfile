@@ -14,7 +14,7 @@ pipeline {
 
             steps {
 
-                git 'https://github.com/nishchitavc21/Sample-app'
+                git 'https://github.com/nishchitavc21/Sample-app.git'
 
             }
 
