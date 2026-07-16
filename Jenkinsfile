@@ -8,17 +8,7 @@ pipeline {
 
     }
 
-    stages {
 
-        stage('Clone Repository') {
-
-            steps {
-
-                git 'https://github.com/nishchitavc21/Sample-app.git'
-
-            }
-
-        }
 
         stage('Build Docker Image') {
 
@@ -34,7 +24,7 @@ pipeline {
 
             steps {
 
-                withCredentials([usernamePassword(credentialsId: 'DockerHub',
+                withCredentials([usernamePassword(credentialsId: 'Github',
 
                 usernameVariable: 'USER',
 
@@ -57,7 +47,5 @@ pipeline {
             }
 
         }
-
-    }
 
 }
