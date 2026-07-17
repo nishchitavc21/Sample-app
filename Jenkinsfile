@@ -13,7 +13,7 @@ pipeline {
             }
         }
 
-        stage('Debug Docker Creds') {
+        stage('Docker Login (secure)') {
             steps {
                 withCredentials([usernamePassword(
                     credentialsId: 'Dockerhub',
@@ -21,23 +21,7 @@ pipeline {
                     passwordVariable: 'DOCKER_PASS'
                 )]) {
                     bat """
-                    echo USER=%DOCKER_USER%
-                    echo PASS-LEN=%DOCKER_PASS:~0,3%***
-                    """
-                }
-            }
-        }
-
-        stage('Docker Login (debug)') {
-            steps {
-                withCredentials([usernamePassword(
-                    credentialsId: 'Dockerhub',
-                    usernameVariable: 'DOCKER_USER',
-                    passwordVariable: 'DOCKER_PASS'
-                )]) {
-                    bat """
-                    docker logout
-                    docker login -u %DOCKER_USER% -p %DOCKER_PASS%
+                    echo | set /p=\"%DOCKER_PASS%\" | docker login -u %DOCKER_USER% --password-stdin
                     """
                 }
             }
