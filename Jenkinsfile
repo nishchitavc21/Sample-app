@@ -9,17 +9,23 @@ pipeline {
 
         stage('Build Docker Image') {
             steps {
-                bat 'docker build -t %IMAGE_NAME% .'
+                // Use Jenkins env interpolation for IMAGE_NAME
+                bat "docker build -t ${env.IMAGE_NAME} ."
             }
         }
 
         stage('Debug Docker Creds') {
             steps {
-                withCredentials([usernamePassword(credentialsId: 'Dockerhub', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
-                   bat """
-                   echo USER=%DOCKER_USER%
-                   echo PASS-LEN=%DOCKER_PASS:~0,3%***
-                   """
+                withCredentials([usernamePassword(
+                    credentialsId: 'Dockerhub',
+                    usernameVariable: 'DOCKER_USER',
+                    passwordVariable: 'DOCKER_PASS'
+                )]) {
+                    // Windows batch uses %VAR% to access env vars
+                    bat """
+                    echo USER=%DOCKER_USER%
+                    echo PASS-LEN=%DOCKER_PASS:~0,3%***
+                    """
                 }
             }
         }
@@ -28,19 +34,22 @@ pipeline {
             steps {
                 withCredentials([usernamePassword(
                     credentialsId: 'Dockerhub',
-                    usernameVariable: 'USER',
-                    passwordVariable: 'PASS'
+                    usernameVariable: 'DOCKER_USER',
+                    passwordVariable: 'DOCKER_PASS'
                 )]) {
-                    bat 'echo %PASS% | docker login -u %USER% --password-stdin'
+                    // Pipe the actual password variable to docker login
+                    bat """
+                    echo %DOCKER_PASS% | docker login -u %DOCKER_USER% --password-stdin
+                    """
                 }
             }
         }
 
         stage('Push Docker Image') {
             steps {
-                bat 'docker push %IMAGE_NAME%'
+                // Use Jenkins env interpolation for IMAGE_NAME here too
+                bat "docker push ${env.IMAGE_NAME}"
             }
         }
-
     }
 }
